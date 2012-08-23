@@ -14,8 +14,8 @@ FDR[7]=0.005
 FDR[8]=0.0005
 
 
-InputFile[0]=up.5.jmotif.txt ## up.5.mmotif.txt
-InputFile[1]=down.5.jmotif.txt ## down.5.mmotif.txt
+InputFile[0]=up.5.hmotif.txt ## up.5.mmotif.txt
+InputFile[1]=down.5.hmotif.txt ## down.5.mmotif.txt
 HEADER[0]=inUFSeq
 #HEADER[1]=exUFSeq
 HEADER[1]=inMFSeq
@@ -30,7 +30,8 @@ BINDINGNUC[1]="GCAUG,UGCAU"
 BINDINGNAME[1]="FOX"
 BINDINGNUC[2]="UUUU"
 BINDINGNAME[2]="TIA1R"
-BINDINGNUC[3]="CUG"
+#BINDINGNUC[3]="CUG"
+BINDINGNUC[3]="CGCC,CGCU,UGCC,UGCU"
 BINDINGNAME[3]="MBNL"
 BINDINGNUC[4]="CUCUC,UCUCU"
 BINDINGNAME[4]="PTB"
@@ -80,7 +81,7 @@ for inputfile in ${InputFile[@]}; do
 				bindingnuc=${BINDINGNUC[$i]}
 				bindingname=${BINDINGNAME[$i]}
 				bash $scriptDir/selectElementAndFDR.sh $inputfile 2 . . $fdr $bindingnuc $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${bindingname}.txt
-				bash $scriptDir/extractOccurencesFromMotifTable.sh $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${bindingname}.txt 2 $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${bindingname}.occ.txls
+				#bash $scriptDir/extractOccurencesFromMotifTable.sh $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${bindingname}.txt 2 $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${bindingname}.occ.txls
 		done;
 		
 		for header in ${HEADER[@]}; do
@@ -125,7 +126,7 @@ for inputfile in ${InputFile[@]}; do
 					
 					
 					bash $scriptDir/selectElementAndFDR.sh $inputfile 2 $header $element $fdr $bindingnuc $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${header}_${element}_${bindingname}.txt
-					bash $scriptDir/extractOccurencesFromMotifTable.sh $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${header}_${element}_${bindingname}.txt 2 $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${header}_${element}_${bindingname}.occ.txls
+					#bash $scriptDir/extractOccurencesFromMotifTable.sh $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${header}_${element}_${bindingname}.txt 2 $inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${header}_${element}_${bindingname}.occ.txls
 					
 					fileToCount=$inputsuffix/FDR$fdr/${inputsuffix}_FDR${fdr}_${header}_${element}_${bindingname}.txt
 					numRow=`wc -l "$fileToCount" | awk '{printf("%s\n", $1);}'`
@@ -137,10 +138,10 @@ for inputfile in ${InputFile[@]}; do
 						#numRow=`expr $numRow - 1`
 						#echo $numRow ${fileToCount/.txt/}_NOHEADER >> eventcount.log
 						echo "========" $bindingname "========" >> eventcount.log
-						cuta.py -f".word" $fileToCount | awk 'FNR>1' >> eventcount.log
+						cuta.py -f".word" $fileToCount | awk -v suf="${inputsuffix}:${header}:${element},${bindingname},FDR<${fdr}" '{if(FNR>1){printf("%s   %s\n",$0,suf);}}' >> eventcount.log
 						cuta.py -f".expected freq,.observed freq" $fileToCount | awk -v FS="\t" -v OFS="\t" 'BEGIN{totalObs=0.0;totalExp=0.0;nUniq=0;}(FNR>1){totalExp+=$1;totalObs+=$2;nUniq++;}END{printf("uniqSeq=%d\ntotalObs=%d\ntotalExp=%f\nfold=%.4f\n",nUniq,totalObs,totalExp,totalObs/totalExp);}' > tmp.sh
 						source tmp.sh
-						echo "uniqSeq=$uniqSeq,totalObs=$totalObs,totalExp=$totalExp,fold=$fold" >> eventcount.log
+						echo "${inputsuffix}:${header}:${element},${bindingname},FDR<${fdr},uniqSeq=$uniqSeq,totalObs=$totalObs,totalExp=$totalExp,fold=$fold" >> eventcount.log
 						BoundTotalUniq=`echo "print $BoundTotalUniq+$uniqSeq" | python -`
 						BoundTotalObs=`echo "print $BoundTotalObs+$totalObs" | python -`
 						BoundTotalExp=`echo "print $BoundTotalExp+$totalExp" | python -`
